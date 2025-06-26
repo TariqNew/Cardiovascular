@@ -1,0 +1,165 @@
+// This is your Prisma schema file
+// Learn more about Prisma schemas: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  // Enable better type safety with previewFeatures
+  previewFeatures = ["filterJson", "fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication and basic info
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  firstName     String
+  lastName      String
+  gender        String    // ✅ Add this line
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isActive      Boolean   @default(true)
+  lastLogin     DateTime?
+
+  // Relations
+  healthProfile HealthProfile?
+  mealLogs      MealLog[]
+  healthLogs    HealthLog[]
+  preferences   UserPreferences?
+
+  @@index([email])
+  @@map("users")
+}
+
+
+// Health profile for storing patient's health information
+model HealthProfile {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  age               Int
+  weight            Float
+  height            Float
+  bloodPressure     String
+  cholesterolLevel  Float
+  bmi               Float
+  medicalConditions String[]
+  allergies         String[]
+  medications       String[] // Added field for tracking medications
+  targetWeight      Float?   // Added field for weight goals
+  dietaryRestrictions String[]
+  activityLevel     ActivityLevel @default(MODERATE)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("health_profiles")
+}
+
+// Meal logging and tracking
+model MealLog {
+  id          String   @id @default(uuid())
+  userId      String
+  mealType    MealType
+  foodItems   String[]
+  calories    Float
+  proteins    Float?   // Added nutritional information
+  carbs       Float?
+  fats        Float?
+  fiber       Float?
+  sodium      Float?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  rating      Int?     @db.SmallInt // User rating of the meal (1-5)
+  notes       String?  // Added field for meal notes
+  isAIGenerated Boolean @default(false)
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([mealType])
+  @@map("meal_logs")
+}
+
+// Health tracking and monitoring
+model HealthLog {
+  id            String   @id @default(uuid())
+  userId        String
+  weight        Float?
+  bloodPressure String?
+  heartRate     Int?     // Added field for heart rate
+  notes         String?
+  symptoms      String[]
+  stress        StressLevel? // Added field for stress tracking
+  sleep         Int?     // Hours of sleep
+  date          DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@map("health_logs")
+}
+
+// User preferences for customization
+model UserPreferences {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  reminderTime      DateTime? // Preferred time for daily reminders
+  mealPlanFrequency MealPlanFrequency @default(DAILY)
+  emailNotifications Boolean  @default(true)
+  pushNotifications Boolean  @default(true)
+  theme             Theme    @default(LIGHT)
+  language          String   @default("en")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+// Enums for better type safety and consistency
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHT
+  MODERATE
+  ACTIVE
+  VERY_ACTIVE
+}
+
+enum StressLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Theme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum MealPlanFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+} 
