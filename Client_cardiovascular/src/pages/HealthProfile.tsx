@@ -12,17 +12,16 @@ const HealthProfile: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-  if (showForm) {
-    document.body.style.overflow = "hidden";
-  } else {
-    document.body.style.overflow = "auto";
-  }
+    if (showForm) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
 
-  return () => {
-    document.body.style.overflow = "auto";
-  };
-}, [showForm]);
-
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [showForm]);
 
   const [healthForm, setHealthForm] = useState({
     age: 0,
@@ -40,6 +39,16 @@ const HealthProfile: React.FC = () => {
     email: "",
     gender: "",
   });
+
+      const [healthData, setHealthData] = useState({
+      height: "0",
+      bloodPressure: "0/0",
+      weight: 0,
+      cholesterolLevel: 0,
+      allergies: "allergic",
+      bmi: 0,
+    });
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,6 +79,44 @@ const HealthProfile: React.FC = () => {
 
     fetchData();
   }, []);
+
+    // Endpoint that fetches the health data
+    useEffect(() => {
+      const fetchHealth = async () => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+  
+        try {
+          const response = await fetch(
+            "http://localhost:8000/api/health/profile",
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+  
+          if (!response.ok) {
+            throw new Error("Failed to fetch health profile");
+          }
+  
+          const data = await response.json();
+          setHealthData({
+            height: data.height || "",
+            bloodPressure: data.bloodPressure || "",
+            weight: data.weight || 0,
+            cholesterolLevel: data.cholesterolLevel || "",
+            bmi: data.bmi || 0,
+            allergies: data.allergies,
+          });
+        } catch (error) {
+          console.error("Error fetching health data:", error);
+        }
+      };
+  
+      fetchHealth();
+    }, []);
 
   const handleHealthFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -108,10 +155,14 @@ const HealthProfile: React.FC = () => {
         </div>
       </div>
       {showForm && (
-        <div className="fixed inset-0 z-50 flex h-full items-start justify-center p-4 pt-10 backdrop-blur-xs backdrop-brightness-75"
-         onClick={() => setShowForm(false)} 
+        <div
+          className="fixed inset-0 z-50 flex h-full items-start justify-center p-4 pt-10 backdrop-blur-xs backdrop-brightness-75"
+          onClick={() => setShowForm(false)} // closes on outside click
         >
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl overflow-y-auto">
+          <div
+            className="bg-white rounded-lg shadow-lg w-full max-w-2xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()} // prevents close on inside click
+          >
             <EditHealthProfileForm
               form={healthForm}
               onChange={handleHealthFormChange}
@@ -160,25 +211,33 @@ const HealthProfile: React.FC = () => {
           <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3">
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500">Height</dt>
-              <dd className="mt-1 text-sm text-gray-900">168 cm</dd>
+              <dd className="mt-1 text-sm text-gray-900">{healthData.height}</dd>
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500">Weight</dt>
-              <dd className="mt-1 text-sm text-gray-900">77 kg</dd>
+              <dd className="mt-1 text-sm text-gray-900">{healthData.weight}</dd>
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500">BMI</dt>
-              <dd className="mt-1 text-sm text-gray-900">27.2 (Overweight)</dd>
-            </div>
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">Blood Type</dt>
-              <dd className="mt-1 text-sm text-gray-900">A+</dd>
+              <dd className="mt-1 text-sm text-gray-900">{healthData.bmi}</dd>
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500">
-                Waist Circumference
+                Blood Pressure
               </dt>
-              <dd className="mt-1 text-sm text-gray-900">92 cm</dd>
+              <dd className="mt-1 text-sm text-gray-900">{healthData.bloodPressure}</dd>
+            </div>
+            <div className="sm:col-span-1">
+              <dt className="text-sm font-medium text-gray-500">
+                Allergic Condition
+                  </dt>
+              <dd className="mt-1 text-sm text-gray-900">{healthData.allergies}</dd>
+            </div>
+            <div className="sm:col-span-1">
+              <dt className="text-sm font-medium text-gray-500">
+                Cholesterol Level
+              </dt>
+              <dd className="mt-1 text-sm text-gray-900">{healthData.cholesterolLevel}</dd>
             </div>
           </dl>
         </div>

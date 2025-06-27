@@ -48,7 +48,7 @@ class RecommendationController {
           return match?.[1] || "N/A";
         };
 
-        const calories = extractValue("Calories");
+        const calories = extractValue("Calories kcal");
         const protein = extractValue("Protein");
         const carbohydrates = extractValue("Carbohydrates");
         const fiber = extractValue("Fiber");
