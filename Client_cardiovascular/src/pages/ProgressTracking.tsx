@@ -5,8 +5,7 @@ import { initializeCharts } from '../services/chartService';
 
 const ProgressTracking: React.FC = () => {
   useEffect(() => {
-    const cleanup = initializeCharts();
-    return cleanup;
+    initializeCharts();
   }, []);
 
   return (

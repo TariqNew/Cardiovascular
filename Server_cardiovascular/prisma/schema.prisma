@@ -1,9 +1,5 @@
-// This is your Prisma schema file
-// Learn more about Prisma schemas: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
-  // Enable better type safety with previewFeatures
+  provider        = "prisma-client-js"
   previewFeatures = ["filterJson", "fullTextSearch"]
 }
 
@@ -12,18 +8,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model for authentication and basic info
+// =======================
+// 👤 USER AUTH & PROFILE
+// =======================
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  password      String
-  firstName     String
-  lastName      String
-  gender        String    // ✅ Add this line
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  isActive      Boolean   @default(true)
-  lastLogin     DateTime?
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  firstName String
+  lastName  String
+  gender    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  isActive  Boolean   @default(true)
+  lastLogin DateTime?
 
   // Relations
   healthProfile HealthProfile?
@@ -31,106 +29,119 @@ model User {
   healthLogs    HealthLog[]
   preferences   UserPreferences?
 
+  notifications Notification[]
+
   @@index([email])
   @@map("users")
 }
 
-
-// Health profile for storing patient's health information
+// ========================
+// 🧍‍♂️ HEALTH PROFILE
+// ========================
 model HealthProfile {
-  id                String   @id @default(uuid())
-  userId            String   @unique
-  age               Int
-  weight            Float
-  height            Float
-  bloodPressure     String
-  cholesterolLevel  Float
-  bmi               Float
-  medicalConditions String[]
-  allergies         String[]
-  medications       String[] // Added field for tracking medications
-  targetWeight      Float?   // Added field for weight goals
+  id                  String        @id @default(uuid())
+  userId              String        @unique
+  age                 Int
+  weight              Float
+  height              Float
+  bloodPressure       String
+  cholesterolLevel    Float
+  bmi                 Float
+  medicalConditions   String[]
+  allergies           String[]
+  medications         String[]
   dietaryRestrictions String[]
-  activityLevel     ActivityLevel @default(MODERATE)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  targetWeight        Float?
+  activityLevel       ActivityLevel @default(MODERATE)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
-  // Relations
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("health_profiles")
 }
 
-// Meal logging and tracking
+// ========================
+// 🥗 MEAL LOGGING
+// ========================
 model MealLog {
-  id          String   @id @default(uuid())
-  userId      String
-  mealType    MealType
-  foodItems   String[]
-  calories    Float
-  proteins    Float?   // Added nutritional information
-  carbs       Float?
-  fats        Float?
-  fiber       Float?
-  sodium      Float?
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  rating      Int?     @db.SmallInt // User rating of the meal (1-5)
-  notes       String?  // Added field for meal notes
-  isAIGenerated Boolean @default(false)
+  id            String     @id @default(uuid())
+  userId        String
+  mealType      MealType
+  foodItems     String[]
+  calories      Float
+  proteins      Float?
+  carbs         Float?
+  fats          Float?
+  fiber         Float?
+  sodium        Float?
+  date          DateTime   @default(now())
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  rating        Int?       @db.SmallInt
+  notes         String?
+  isAIGenerated Boolean    @default(false)
+  source        MealSource @default(AI)
 
-  // Relations
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, date])
   @@index([mealType])
   @@map("meal_logs")
 }
 
-// Health tracking and monitoring
+// ========================
+// 📉 HEALTH LOGS
+// ========================
 model HealthLog {
-  id            String   @id @default(uuid())
+  id            Int      @id @default(autoincrement())
   userId        String
-  weight        Float?
-  bloodPressure String?
-  heartRate     Int?     // Added field for heart rate
+  weight        Float
+  bloodPressure String
+  cholesterol   Float?
+  bmi           Float?
   notes         String?
-  symptoms      String[]
-  stress        StressLevel? // Added field for stress tracking
-  sleep         Int?     // Hours of sleep
   date          DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
 
-  // Relations
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, date])
-  @@map("health_logs")
+  user User @relation(fields: [userId], references: [id])
 }
 
-// User preferences for customization
+// =========================
+// ⚙️ USER PREFERENCES
+// =========================
 model UserPreferences {
-  id                String   @id @default(uuid())
-  userId            String   @unique
-  reminderTime      DateTime? // Preferred time for daily reminders
-  mealPlanFrequency MealPlanFrequency @default(DAILY)
-  emailNotifications Boolean  @default(true)
-  pushNotifications Boolean  @default(true)
-  theme             Theme    @default(LIGHT)
-  language          String   @default("en")
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                 String            @id @default(uuid())
+  userId             String            @unique
+  reminderTime       DateTime?
+  mealPlanFrequency  MealPlanFrequency @default(DAILY)
+  emailNotifications Boolean           @default(true)
+  pushNotifications  Boolean           @default(true)
+  theme              Theme             @default(LIGHT)
+  language           String            @default("en")
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
-  // Relations
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_preferences")
 }
 
-// Enums for better type safety and consistency
+model Notification {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  title       String
+  description String
+  type        String
+  time        DateTime @default(now())
+  read        Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// =====================
+// ENUMS
+// =====================
 enum MealType {
   BREAKFAST
   LUNCH
@@ -162,4 +173,10 @@ enum MealPlanFrequency {
   DAILY
   WEEKLY
   MONTHLY
-} 
+}
+
+enum MealSource {
+  AI
+  USER
+  IMPORTED
+}

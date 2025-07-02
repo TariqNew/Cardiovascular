@@ -33,7 +33,7 @@ const Dashboard: React.FC = () => {
 
       try {
         const response = await fetch(
-          "http://localhost:8000/api/health/profile",
+          "http://localhost:5050/api/health/profile",
           {
             method: "GET",
             headers: {
@@ -67,7 +67,7 @@ const Dashboard: React.FC = () => {
       if (!token) return;
 
       try {
-        const response = await fetch("http://localhost:8000/api/auth/profile", {
+        const response = await fetch("http://localhost:5050/api/auth/profile", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,

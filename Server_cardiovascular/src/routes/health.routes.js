@@ -30,7 +30,6 @@ router.post('/profile', healthProfileValidation, healthController.createOrUpdate
 router.get('/profile', healthController.getHealthProfile);
 
 // Health logs routes
-router.post('/logs', healthLogValidation, healthController.addHealthLog);
-router.get('/logs', healthController.getHealthLogs);
+router.get('/logs', healthController.getGraphData);
 
 module.exports = router; 

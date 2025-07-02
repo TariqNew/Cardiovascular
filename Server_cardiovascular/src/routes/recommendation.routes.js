@@ -18,4 +18,11 @@ router.get('/tips', recommendationController.getHealthTips);
 // Schedule daily meals
 router.post('/schedule-meals', recommendationController.scheduleDailyMeals);
 
+// Image fetch route
+router.get('/image-proxy', recommendationController.imageProxy);
+
+// Schedule daily meals
+router.get('/docs', recommendationController.getHealthRecommendations);
+
+
 module.exports = router; 

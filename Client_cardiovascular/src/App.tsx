@@ -6,6 +6,7 @@ import HealthProfile from './pages/HealthProfile';
 import MealPlans from './pages/MealPlan';
 import ProgressTracking from './pages/ProgressTracking';
 import Education from './pages/Education';
+import HealthRecommendations from './components/HealthRecommendations';
 import Login from './components/SignIn';
 import Register from './components/SignUp';
 
@@ -34,6 +35,8 @@ const App: React.FC = () => {
         return <ProgressTracking />;
       case 'education':
         return <Education />;
+      case 'recommendations':
+        return <HealthRecommendations />;
       default:
         return <Login setActiveTab={setActiveTab} />;
     }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import EditHealthProfileForm from "../components/EditHealthProfileForm";
 
 interface userData {
-  firsName: string;
+  firstName: string;
   lastName: string;
   email: string;
   gender: string;
@@ -55,7 +55,7 @@ const HealthProfile: React.FC = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        const response = await fetch("http://localhost:8000/api/auth/profile", {
+      const response = await fetch("http://localhost:5050/api/auth/profile", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -88,7 +88,7 @@ const HealthProfile: React.FC = () => {
   
         try {
           const response = await fetch(
-            "http://localhost:8000/api/health/profile",
+            "http://localhost:5050/api/health/profile",
             {
               method: "GET",
               headers: {

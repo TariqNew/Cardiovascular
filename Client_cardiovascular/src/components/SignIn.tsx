@@ -18,7 +18,7 @@ const Login: React.FC<LoginProps> = ({ setActiveTab }) => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8000/api/auth/login", {
+      const response = await fetch("http://localhost:5050/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

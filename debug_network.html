@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network Debug Test</title>
+</head>
+<body>
+    <h1>Network Debug Test</h1>
+    <button onclick="testServer()">Test Server Connection</button>
+    <button onclick="testWithToken()">Test With Token</button>
+    <button onclick="testImageProxy()">Test Image Proxy</button>
+    <div id="results"></div>
+
+    <script>
+        function log(message) {
+            document.getElementById('results').innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+
+        async function testServer() {
+            log('Testing server connection...');
+            try {
+                const response = await fetch('http://localhost:5050/api/recommendations/diet');
+                log('Status: ' + response.status);
+                log('Status Text: ' + response.statusText);
+                const text = await response.text();
+                log('Response: ' + text);
+            } catch (error) {
+                log('ERROR: ' + error.message);
+                log('Error details: ' + JSON.stringify(error));
+            }
+        }
+
+        async function testWithToken() {
+            log('Testing with token...');
+            const token = localStorage.getItem('token');
+            log('Token found: ' + (token ? 'YES' : 'NO'));
+            if (token) {
+                log('Token length: ' + token.length);
+                log('Token preview: ' + token.substring(0, 20) + '...');
+            }
+            
+            try {
+                const response = await fetch('http://localhost:5050/api/recommendations/diet', {
+                    headers: {
+                        'Authorization': 'Bearer ' + (token || 'fake-token')
+                    }
+                });
+                log('Status: ' + response.status);
+                const text = await response.text();
+                log('Response: ' + text);
+            } catch (error) {
+                log('ERROR: ' + error.message);
+            }
+        }
+
+        async function testImageProxy() {
+            log('Testing image proxy...');
+            const token = localStorage.getItem('token');
+            
+            try {
+                const response = await fetch('http://localhost:5050/api/recommendations/image-proxy?query=breakfast', {
+                    headers: {
+                        'Authorization': 'Bearer ' + (token || 'fake-token')
+                    }
+                });
+                log('Status: ' + response.status);
+                const text = await response.text();
+                log('Response: ' + text);
+            } catch (error) {
+                log('ERROR: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

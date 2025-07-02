@@ -1,7 +1,159 @@
-import React from 'react';
-import MealCard from '../components/MealCard';
+import React, { useEffect, useState } from "react";
+import MealCard from "../components/MealCard";
+
+interface MealData {
+  title: string;
+  preparationTime: string;
+  fullSection: string;
+}
+
+interface DietRecommendation {
+  breakfast: MealData;
+  lunch: MealData;
+  dinner: MealData;
+  fullText: string;
+}
 
 const MealPlans: React.FC = () => {
+  const [dietData, setDietData] = useState<DietRecommendation | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [breakfastImageUrl, setBreakfastImageUrl] = useState<string>("");
+  const [lunchImageUrl, setLunchImageUrl] = useState<string>("");
+  const [dinnerImageUrl, setDinnerImageUrl] = useState<string>("");
+
+  
+  useEffect(() => {
+  const fetchDietRecommendation = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      console.log("🔑 Token found:", token ? "YES" : "NO");
+      console.log("🔑 Token length:", token ? token.length : 0);
+      
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
+
+      console.log("🌐 Making request to:", "http://localhost:5050/api/recommendations/diet");
+      
+      const res = await fetch("http://localhost:5050/api/recommendations/diet", {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log("📡 Response status:", res.status);
+      console.log("📡 Response statusText:", res.statusText);
+      console.log("📡 Response headers:", Object.fromEntries(res.headers.entries()));
+      
+      const contentType = res.headers.get("content-type");
+      const raw = await res.text(); // Get the raw response
+      console.log("📦 Raw response body:", raw);
+      console.log("📦 Content-Type:", contentType);
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("Authentication failed. Please log in again.");
+        }
+        throw new Error(`Server error ${res.status}: ${raw}`);
+      }
+
+      // Try to parse JSON only if content-type is correct
+      if (!contentType?.includes("application/json")) {
+        throw new Error("Expected JSON response but got something else");
+      }
+
+      const data = JSON.parse(raw); // Safely parse
+      console.log("✅ Parsed data:", data);
+      setDietData(data);
+
+      // Fetch images for all meals with error handling
+      const fetchMealImage = async (title: string, setImageUrl: (url: string) => void) => {
+        try {
+          const response = await fetch(
+            `http://localhost:5050/api/recommendations/image-proxy?query=${encodeURIComponent(title)}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          
+          if (response.ok) {
+            const imageData = await response.json();
+            if (imageData.thumb) {
+              setImageUrl(imageData.thumb);
+            }
+          } else {
+            console.error(`Failed to fetch image for ${title}:`, response.status);
+          }
+        } catch (error) {
+          console.error(`Error fetching image for ${title}:`, error);
+        }
+      };
+      
+      if (data?.breakfast?.title) {
+        await fetchMealImage(data.breakfast.title, setBreakfastImageUrl);
+      }
+      
+      if (data?.lunch?.title) {
+        await fetchMealImage(data.lunch.title, setLunchImageUrl);
+      }
+      
+      if (data?.dinner?.title) {
+        await fetchMealImage(data.dinner.title, setDinnerImageUrl);
+      }
+    } catch (error: any) {
+      console.error("❌ Fetch error:", error);
+      setError(error.message || "Unknown error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchDietRecommendation();
+}, []);
+
+
+  if (loading) return (
+    <div className="flex justify-center items-center p-8">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      <span className="ml-2">Loading meal plans...</span>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="bg-red-50 border border-red-200 rounded-md p-4">
+      <div className="flex">
+        <div className="flex-shrink-0">
+          <i className="fas fa-exclamation-triangle text-red-400"></i>
+        </div>
+        <div className="ml-3">
+          <h3 className="text-sm font-medium text-red-800">Error Loading Meal Plan</h3>
+          <p className="mt-2 text-sm text-red-700">{error}</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Show what data we have, even if incomplete
+  const hasSomeData = dietData && (dietData.breakfast || dietData.lunch || dietData.dinner);
+  
+  if (!hasSomeData) {
+    return (
+      <div className="text-center py-8">
+        <i className="fas fa-utensils text-gray-400 text-4xl mb-4"></i>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No Meal Plan Available</h3>
+        <p className="text-gray-500 mb-4">Complete your health profile to get personalized meal recommendations.</p>
+        <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+          Complete Health Profile
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="md:flex md:items-center md:justify-between mb-6">
@@ -43,102 +195,149 @@ const MealPlans: React.FC = () => {
         </div>
         <div className="px-4 py-5 sm:p-6">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-            <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
-              <div className="h-48 w-full overflow-hidden">
-                <img
-                  src="https://readdy.ai/api/search-image?query=Healthy%20breakfast%20with%20oatmeal%20topped%20with%20fresh%20berries%2C%20sliced%20almonds%2C%20and%20honey%2C%20served%20with%20a%20glass%20of%20fresh%20orange%20juice.%20Clean%20eating%20concept%20with%20natural%20morning%20light&width=600&height=400&seq=4&orientation=landscape"
-                  alt="Breakfast"
-                  className="w-full h-full object-cover object-top"
-                />
-              </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-lg font-medium text-gray-900">Breakfast</h4>
-                  <span className="text-sm text-gray-500">7:00 AM</span>
+            {/* Show available meals or placeholder */}
+            {/* Breakfast */}
+            {dietData.breakfast ? (
+              <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+                <div className="h-48 w-full overflow-hidden">
+                  <img
+                    src={breakfastImageUrl || "https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Breakfast"}
+                    alt="Breakfast"
+                    className="w-full h-full object-cover object-top"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Breakfast";
+                    }}
+                  />
                 </div>
-                <h5 className="text-md font-medium text-gray-800 mb-2">Berry Oatmeal Bowl</h5>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <i className="fas fa-fire-alt text-orange-500 mr-2"></i>
-                    320 calories
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-lg font-medium text-gray-900">
+                      Breakfast
+                    </h4>
+                    <span className="text-sm text-gray-500">7:00 AM</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <i className="fas fa-clock text-blue-500 mr-2"></i>
-                    Prep time: 10 mins
+                  <h5 className="text-md font-medium text-gray-800 mb-2">
+                    {dietData.breakfast.title}
+                  </h5>
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <i className="fas fa-fire-alt text-orange-500 mr-2"></i>
+                      320 kcal calories
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <i className="fas fa-clock text-blue-500 mr-2"></i>
+                      Prep time: {dietData.breakfast.preparationTime}
+                    </div>
                   </div>
-                </div>
-                <div className="mt-4">
-                  <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 !rounded-button whitespace-nowrap cursor-pointer">
-                    <i className="fas fa-info-circle mr-2"></i>
-                    View Recipe
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
-              <div className="h-48 w-full overflow-hidden">
-                <img
-                  src="https://readdy.ai/api/search-image?query=Healthy%20Mediterranean%20lunch%20with%20grilled%20salmon%20fillet%2C%20quinoa%2C%20roasted%20vegetables%2C%20and%20fresh%20herbs.%20Served%20on%20a%20white%20plate%20with%20lemon%20wedges.%20Clean%20eating%20concept&width=600&height=400&seq=5&orientation=landscape"
-                  alt="Lunch"
-                  className="w-full h-full object-cover object-top"
-                />
-              </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-lg font-medium text-gray-900">Lunch</h4>
-                  <span className="text-sm text-gray-500">12:30 PM</span>
-                </div>
-                <h5 className="text-md font-medium text-gray-800 mb-2">Grilled Salmon & Quinoa</h5>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <i className="fas fa-fire-alt text-orange-500 mr-2"></i>
-                    450 calories
-                  </div>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <i className="fas fa-clock text-blue-500 mr-2"></i>
-                    Prep time: 25 mins
+                  <div className="mt-4">
+                    <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 !rounded-button whitespace-nowrap cursor-pointer">
+                      <i className="fas fa-info-circle mr-2"></i>
+                      View Recipe
+                    </button>
                   </div>
                 </div>
-                <div className="mt-4">
-                  <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 !rounded-button whitespace-nowrap cursor-pointer">
-                    <i className="fas fa-info-circle mr-2"></i>
-                    View Recipe
-                  </button>
-                </div>
               </div>
-            </div>
-            <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
-              <div className="h-48 w-full overflow-hidden">
-                <img
-                  src="https://readdy.ai/api/search-image?query=Healthy%20dinner%20with%20herb%20roasted%20chicken%20breast%2C%20steamed%20broccoli%2C%20and%20sweet%20potato%20mash.%20Served%20on%20a%20white%20plate%20with%20fresh%20herbs%20garnish.%20Clean%20eating%20concept&width=600&height=400&seq=6&orientation=landscape"
-                  alt="Dinner"
-                  className="w-full h-full object-cover object-top"
-                />
+            ) : (
+              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <i className="fas fa-utensils text-gray-400 text-2xl mb-2"></i>
+                <h4 className="text-lg font-medium text-gray-900 mb-1">Breakfast</h4>
+                <p className="text-sm text-gray-500">Meal recommendation not available</p>
               </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-lg font-medium text-gray-900">Dinner</h4>
-                  <span className="text-sm text-gray-500">6:30 PM</span>
+            )}
+
+            {/* Lunch */}
+            {dietData.lunch ? (
+              <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+                <div className="h-48 w-full overflow-hidden">
+                  <img
+                    src={lunchImageUrl || "https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Lunch"}
+                    alt="Lunch"
+                    className="w-full h-full object-cover object-top"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Lunch";
+                    }}
+                  />
                 </div>
-                <h5 className="text-md font-medium text-gray-800 mb-2">Herb Chicken & Vegetables</h5>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <i className="fas fa-fire-alt text-orange-500 mr-2"></i>
-                    380 calories
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-lg font-medium text-gray-900">Lunch</h4>
+                    <span className="text-sm text-gray-500">12:30 PM</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <i className="fas fa-clock text-blue-500 mr-2"></i>
-                    Prep time: 30 mins
+                  <h5 className="text-md font-medium text-gray-800 mb-2">
+                    {dietData.lunch.title}
+                  </h5>
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <i className="fas fa-fire-alt text-orange-500 mr-2"></i>
+                      450 kcal calories
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <i className="fas fa-clock text-blue-500 mr-2"></i>
+                      Prep time: {dietData.lunch.preparationTime}
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 !rounded-button whitespace-nowrap cursor-pointer">
+                      <i className="fas fa-info-circle mr-2"></i>
+                      View Recipe
+                    </button>
                   </div>
                 </div>
-                <div className="mt-4">
-                  <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 !rounded-button whitespace-nowrap cursor-pointer">
-                    <i className="fas fa-info-circle mr-2"></i>
-                    View Recipe
-                  </button>
+              </div>
+            ) : (
+              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <i className="fas fa-utensils text-gray-400 text-2xl mb-2"></i>
+                <h4 className="text-lg font-medium text-gray-900 mb-1">Lunch</h4>
+                <p className="text-sm text-gray-500">Meal recommendation not available</p>
+              </div>
+            )}
+
+            {/* Dinner */}
+            {dietData.dinner ? (
+              <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+                <div className="h-48 w-full overflow-hidden">
+                  <img
+                    src={dinnerImageUrl || "https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Dinner"}
+                    alt="Dinner"
+                    className="w-full h-full object-cover object-top"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=Dinner";
+                    }}
+                  />
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-lg font-medium text-gray-900">Dinner</h4>
+                    <span className="text-sm text-gray-500">6:30 PM</span>
+                  </div>
+                  <h5 className="text-md font-medium text-gray-800 mb-2">
+                    {dietData.dinner.title}
+                  </h5>
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <i className="fas fa-fire-alt text-orange-500 mr-2"></i>
+                      380 kcal calories
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <i className="fas fa-clock text-blue-500 mr-2"></i>
+                      Prep time: {dietData.dinner.preparationTime}
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 !rounded-button whitespace-nowrap cursor-pointer">
+                      <i className="fas fa-info-circle mr-2"></i>
+                      View Recipe
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <i className="fas fa-utensils text-gray-400 text-2xl mb-2"></i>
+                <h4 className="text-lg font-medium text-gray-900 mb-1">Dinner</h4>
+                <p className="text-sm text-gray-500">Meal recommendation not available</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -151,11 +350,13 @@ const MealPlans: React.FC = () => {
         <div className="px-4 py-5 sm:p-6">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
-              <h4 className="text-md font-medium text-gray-900 mb-4">Healthy Snacks</h4>
+              <h4 className="text-md font-medium text-gray-900 mb-4">
+                Healthy Snacks
+              </h4>
               <ul className="space-y-3">
                 <li className="flex items-center text-sm text-gray-600">
-                  <i className="fas fa-apple-alt text-red-500 mr-3"></i>
-                  1 medium apple with 1 tbsp almond butter (10:30 AM)
+                  <i className="fas fa-apple-alt text-red-500 mr-3"></i>1 medium
+                  apple with 1 tbsp almond butter (10:30 AM)
                 </li>
                 <li className="flex items-center text-sm text-gray-600">
                   <i className="fas fa-carrot text-orange-500 mr-3"></i>
@@ -168,7 +369,9 @@ const MealPlans: React.FC = () => {
               </ul>
             </div>
             <div>
-              <h4 className="text-md font-medium text-gray-900 mb-4">Daily Supplements</h4>
+              <h4 className="text-md font-medium text-gray-900 mb-4">
+                Daily Supplements
+              </h4>
               <ul className="space-y-3">
                 <li className="flex items-center text-sm text-gray-600">
                   <i className="fas fa-pills text-purple-500 mr-3"></i>
@@ -201,7 +404,9 @@ const MealPlans: React.FC = () => {
                   <i className="fas fa-fire-alt text-indigo-600 text-xl"></i>
                 </div>
                 <div className="ml-3">
-                  <h4 className="text-sm font-medium text-gray-900">Calories</h4>
+                  <h4 className="text-sm font-medium text-gray-900">
+                    Calories
+                  </h4>
                   <p className="text-xl font-semibold text-indigo-600">1,800</p>
                   <p className="text-xs text-gray-500">of 2,000 target</p>
                 </div>

@@ -1,7 +1,20 @@
-import * as echarts from 'echarts';
-import { healthMetricsData, dates } from '../assets/data/healthMetricsData';
+import * as echarts from "echarts";
 
-export const initializeCharts = () => {
+export const initializeCharts = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+    const response = await fetch('http://localhost:5050/api/health/logs', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) throw new Error("Failed to fetch graph data");
+
+  const data = await response.json();
+  const { dates, weight, bloodPressure, cholesterol, bmi } = data;
+
   const instances: echarts.ECharts[] = [];
 
   const tryInitChart = (id: string, option: echarts.EChartsOption) => {
@@ -15,113 +28,113 @@ export const initializeCharts = () => {
     instances.push(chart);
   };
 
-  // Chart Options
-  tryInitChart('weight-chart', {
+  // Charts
+  tryInitChart("weight-chart", {
     animation: false,
-    title: { text: 'Weight Trend (kg)', left: 'center', textStyle: { fontSize: 14 } },
-    tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: dates },
-    yAxis: { type: 'value', min: 75, max: 82 },
+    title: { text: "Weight Trend (kg)", left: "center", textStyle: { fontSize: 14 } },
+    tooltip: { trigger: "axis" },
+    xAxis: { type: "category", data: dates },
+    yAxis: { type: "value" },
     series: [
       {
-        data: healthMetricsData.weight,
-        type: 'line',
+        data: weight,
+        type: "line",
         smooth: true,
-        lineStyle: { color: '#4F46E5' },
-        itemStyle: { color: '#4F46E5' },
+        lineStyle: { color: "#4F46E5" },
+        itemStyle: { color: "#4F46E5" },
       },
     ],
   });
 
-  tryInitChart('bp-chart', {
+  tryInitChart("bp-chart", {
     animation: false,
-    title: { text: 'Blood Pressure (mmHg)', left: 'center', textStyle: { fontSize: 14 } },
-    tooltip: { trigger: 'axis' },
-    legend: { data: ['Systolic', 'Diastolic'], bottom: 0 },
-    xAxis: { type: 'category', data: dates },
-    yAxis: { type: 'value', min: 70, max: 140 },
+    title: { text: "Blood Pressure (mmHg)", left: "center", textStyle: { fontSize: 14 } },
+    tooltip: { trigger: "axis" },
+    legend: { data: ["Systolic", "Diastolic"], bottom: 0 },
+    xAxis: { type: "category", data: dates },
+    yAxis: { type: "value" },
     series: [
       {
-        name: 'Systolic',
-        data: healthMetricsData.bloodPressure.systolic,
-        type: 'line',
+        name: "Systolic",
+        data: bloodPressure?.systolic || [],
+        type: "line",
         smooth: true,
-        lineStyle: { color: '#EF4444' },
-        itemStyle: { color: '#EF4444' },
+        lineStyle: { color: "#EF4444" },
+        itemStyle: { color: "#EF4444" },
       },
       {
-        name: 'Diastolic',
-        data: healthMetricsData.bloodPressure.diastolic,
-        type: 'line',
+        name: "Diastolic",
+        data: bloodPressure?.diastolic || [],
+        type: "line",
         smooth: true,
-        lineStyle: { color: '#F97316' },
-        itemStyle: { color: '#F97316' },
+        lineStyle: { color: "#F97316" },
+        itemStyle: { color: "#F97316" },
       },
     ],
   });
 
-  tryInitChart('cholesterol-chart', {
+  tryInitChart("cholesterol-chart", {
     animation: false,
-    title: { text: 'Cholesterol Levels (mg/dL)', left: 'center', textStyle: { fontSize: 14 } },
-    tooltip: { trigger: 'axis' },
-    legend: { data: ['Total', 'LDL', 'HDL'], bottom: 0 },
-    xAxis: { type: 'category', data: dates },
-    yAxis: { type: 'value', min: 40, max: 230 },
+    title: { text: "Cholesterol Levels (mg/dL)", left: "center", textStyle: { fontSize: 14 } },
+    tooltip: { trigger: "axis" },
+    legend: { data: ["Total", "LDL", "HDL"], bottom: 0 },
+    xAxis: { type: "category", data: dates },
+    yAxis: { type: "value" },
     series: [
       {
-        name: 'Total',
-        data: healthMetricsData.cholesterol.total,
-        type: 'line',
+        name: "Total",
+        data: cholesterol?.total || [],
+        type: "line",
         smooth: true,
-        lineStyle: { color: '#8B5CF6' },
-        itemStyle: { color: '#8B5CF6' },
+        lineStyle: { color: "#8B5CF6" },
+        itemStyle: { color: "#8B5CF6" },
       },
       {
-        name: 'LDL',
-        data: healthMetricsData.cholesterol.ldl,
-        type: 'line',
+        name: "LDL",
+        data: cholesterol?.ldl || [],
+        type: "line",
         smooth: true,
-        lineStyle: { color: '#EC4899' },
-        itemStyle: { color: '#EC4899' },
+        lineStyle: { color: "#EC4899" },
+        itemStyle: { color: "#EC4899" },
       },
       {
-        name: 'HDL',
-        data: healthMetricsData.cholesterol.hdl,
-        type: 'line',
+        name: "HDL",
+        data: cholesterol?.hdl || [],
+        type: "line",
         smooth: true,
-        lineStyle: { color: '#10B981' },
-        itemStyle: { color: '#10B981' },
+        lineStyle: { color: "#10B981" },
+        itemStyle: { color: "#10B981" },
       },
     ],
   });
 
-  tryInitChart('bmi-chart', {
+  tryInitChart("bmi-chart", {
     animation: false,
-    title: { text: 'BMI Trend', left: 'center', textStyle: { fontSize: 14 } },
-    tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: dates },
-    yAxis: { type: 'value', min: 26, max: 29 },
+    title: { text: "BMI Trend", left: "center", textStyle: { fontSize: 14 } },
+    tooltip: { trigger: "axis" },
+    xAxis: { type: "category", data: dates },
+    yAxis: { type: "value" },
     series: [
       {
-        data: healthMetricsData.bmi,
-        type: 'line',
+        data: bmi || [],
+        type: "line",
         smooth: true,
-        lineStyle: { color: '#0EA5E9' },
-        itemStyle: { color: '#0EA5E9' },
+        lineStyle: { color: "#0EA5E9" },
+        itemStyle: { color: "#0EA5E9" },
         markLine: {
           silent: true,
-          lineStyle: { color: '#10B981' },
-          data: [{ yAxis: 25, name: 'Healthy Range' }],
+          lineStyle: { color: "#10B981" },
+          data: [{ yAxis: 25, name: "Healthy Range" }],
         },
       },
     ],
   });
 
   const handleResize = () => instances.forEach((chart) => chart.resize());
-  window.addEventListener('resize', handleResize);
+  window.addEventListener("resize", handleResize);
 
   return () => {
-    window.removeEventListener('resize', handleResize);
+    window.removeEventListener("resize", handleResize);
     instances.forEach((chart) => chart.dispose());
   };
 };

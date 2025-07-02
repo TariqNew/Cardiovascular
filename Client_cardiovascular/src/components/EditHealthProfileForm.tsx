@@ -33,7 +33,7 @@ const EditHealthProfileForm: React.FC<EditHealthProfileFormProps> = ({
     };
 
     try {
-      const res = await fetch("http://localhost:8000/api/health/profile", {
+      const response = await fetch("http://localhost:5050/api/health/profile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,13 +42,13 @@ const EditHealthProfileForm: React.FC<EditHealthProfileFormProps> = ({
         body: JSON.stringify(payload),
       });
 
-      const text = await res.text();
-      if (res.ok) {
+      const text = await response.text();
+      if (response.ok) {
         console.log("Saved:", text);
         onClose();
       } else {
         alert("Failed to save.");
-        console.error("Response status:", res.status);
+        console.error("Response status:", response.status);
         console.error("Response body:", text);
       }
     } catch (err) {

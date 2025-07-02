@@ -84,6 +84,33 @@ class AIService {
       throw new Error("Failed to generate health tips");
     }
   }
+  async generateHealthRecommendation(text) {
+    try {
+      const prompt = this.createHealthTipsPromptText(text); // this should accept a string of text
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a cardiovascular health expert. Provide personalized health tips based on the patient's uploaded data.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 300,
+      });
+
+      return completion.choices[0].message.content;
+    } catch (error) {
+      console.error("Error generating health tips:", error);
+      throw new Error("Failed to generate health tips");
+    }
+  }
 
   async analyzeMealHistory(mealLogs, healthProfile) {
     try {
@@ -126,19 +153,10 @@ class AIService {
     Based in Tanzania please provide:
     1. Breakfast
       - provide the title of the breakfast
-      - nutritional information
-      - Why meal is beneficial for their condition
-      - Cooking Instructions or preparations tips
     2. Lunch
       - provide the title of the Lunch
-      - nutritional information
-      - Why meal is beneficial for their condition
-      - Cooking Instructions or preparations tips
     3. Dinner
-      - provide the title of the Dinner
-      - nutritional information
-      - Why meal is beneficial for their condition
-      - Cooking Instructions or preparations tips`;
+      - provide the title of the Dinner`;
   }
 
   createHealthAnalysisPrompt(healthLogs) {
@@ -175,6 +193,30 @@ class AIService {
     3. Stress management tips
     4. Warning signs to watch for
     5. Dietary guidelines`;
+  }
+
+  createHealthTipsPromptText(text) {
+    if (!text || typeof text !== "string" || text.trim().length === 0) {
+      throw new Error(
+        "No valid content provided to generate the health prompt."
+      );
+    }
+
+    // Optional: clean or truncate text if too long
+    const cleanedText = text
+      .replace(/\r/g, "") // remove carriage returns
+      .replace(/\n{2,}/g, "\n") // normalize multiple newlines
+      .trim();
+
+    const prompt = `
+Below is a patient's uploaded health document. Based on this data, provide personalized cardiovascular health recommendations. Be concise and focus on lifestyle, diet, and warning signs:
+
+---
+${cleanedText}
+---
+`;
+
+    return prompt;
   }
 
   createMealAnalysisPrompt(mealLogs, healthProfile) {
