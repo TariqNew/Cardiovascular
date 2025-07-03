@@ -174,44 +174,22 @@ const Dashboard: React.FC = () => {
       </div>
       <div className="mb-6">
         <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-          Today's Recommended Meals
+          Nutritional Guidance
         </h3>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-          <MealCard
-            title="Breakfast"
-            description="Berry Oatmeal with Nuts"
-            image="https://readdy.ai/api/search-image?query=Healthy%20breakfast%20with%20oatmeal%2C%20fresh%20berries%2C%20nuts%20and%20honey%20in%20a%20white%20bowl%20on%20light%20background.%20Top%20view%20of%20nutritious%20morning%20meal%20for%20cardiovascular%20health%20with%20vibrant%20colors%20and%20natural%20ingredients&width=600&height=400&seq=1&orientation=landscape"
-            alt="Breakfast"
-            calories="320 calories"
-            feature="Heart-healthy"
-            featureIcon="fa-heartbeat"
-            featureColor="text-red-500"
-          />
-          <MealCard
-            title="Lunch"
-            description="Mediterranean Salmon Bowl"
-            image="https://readdy.ai/api/search-image?query=Healthy%20Mediterranean%20lunch%20with%20grilled%20salmon%2C%20quinoa%2C%20fresh%20vegetables%2C%20olive%20oil%2C%20and%20lemon%20on%20a%20white%20plate.%20Nutritious%20meal%20for%20cardiovascular%20health%20with%20vibrant%20colors%20and%20balanced%20ingredients&width=600&height=400&seq=2&orientation=landscape"
-            alt="Lunch"
-            calories="450 calories"
-            feature="Omega-3 rich"
-            featureIcon="fa-fish"
-            featureColor="text-blue-500"
-          />
-          <MealCard
-            title="Dinner"
-            description="Herb Chicken with Vegetables"
-            image="https://readdy.ai/api/search-image?query=Healthy%20dinner%20with%20baked%20chicken%20breast%2C%20steamed%20broccoli%2C%20sweet%20potatoes%2C%20and%20herbs%20on%20a%20white%20plate.%20Low-sodium%20nutritious%20meal%20for%20cardiovascular%20health%20with%20vibrant%20colors%20and%20balanced%20ingredients&width=600&height=400&seq=3&orientation=landscape"
-            alt="Dinner"
-            calories="380 calories"
-            feature="Low sodium"
-            featureIcon="fa-drumstick-bite"
-            featureColor="text-yellow-700"
-          />
-        </div>
-        <div className="mt-4 text-right">
-          <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 !rounded-button whitespace-nowrap cursor-pointer">
-            View full meal plan <i className="fas fa-arrow-right ml-2"></i>
-          </button>
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="px-6 py-4">
+            <img 
+              src="https://readdy.ai/api/search-image?query=Healthy%20dinner%20with%20baked%20chicken%20breast%2C%20steamed%20broccoli%2C%20sweet%20potatoes%2C%20and%20herbs%20on%20a%20white%20plate.%20Low-sodium%20nutritious%20meal%20for%20cardiovascular%20health%20with%20vibrant%20colors%20and%20balanced%20ingredients&width=600&height=400&seq=3&orientation=landscape"
+              alt="Heart-healthy nutrition guide"
+              className="w-full h-64 object-cover rounded-lg"
+            />
+            <div className="mt-4 text-center">
+              <h4 className="text-lg font-medium text-gray-900">Heart-Healthy Nutrition</h4>
+              <p className="mt-2 text-sm text-gray-600">
+                Discover the power of cardiovascular-friendly foods to support your heart health journey.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
       <div className="bg-white shadow rounded-lg mb-6">

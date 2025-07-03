@@ -42,7 +42,6 @@ const HealthRecommendations: React.FC = () => {
           throw new Error('No authentication token found');
         }
 
-        console.log('🚀 Fetching AI recommendations...');
         const response = await fetch('http://localhost:5050/api/recommendations/docs', {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -55,37 +54,10 @@ const HealthRecommendations: React.FC = () => {
         }
 
         const data = await response.json();
-        console.log('📊 Complete AI Response:', data);
-        
-        if (data.success && data.data) {
+        if(data.success && data.data){
           setAiData(data);
-        } else {
-          // Handle old format for backward compatibility
-          if (data.tips) {
-            const fallbackData: AIResponse = {
-              success: true,
-              data: {
-                fullResponse: data.tips,
-                sections: parseAIRecommendations(data.tips),
-                metadata: {
-                  generatedAt: new Date().toISOString(),
-                  userId: 0,
-                  profileData: {}
-                },
-                summary: {
-                  totalSections: 0,
-                  wordCount: data.tips?.split(/\s+/).length || 0,
-                  hasHighPriorityItems: false
-                }
-              }
-            };
-            setAiData(fallbackData);
-          } else {
-            throw new Error('No recommendations data received');
-          }
         }
       } catch (err: any) {
-        console.error('❌ Error fetching recommendations:', err);
         setError(err.message || 'Failed to load recommendations');
       } finally {
         setLoading(false);
@@ -313,6 +285,54 @@ const HealthRecommendations: React.FC = () => {
           </div>
         </div>
       )}
+      
+      {/* Health Profile Summary */}
+      {metadata?.profileData && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h3 className="text-lg font-medium text-blue-900 mb-3">
+            <i className="fas fa-user-chart mr-2"></i>
+            Health Profile Used for Recommendations
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-sm">
+            {metadata.profileData.age && (
+              <div className="bg-white p-2 rounded">
+                <span className="font-medium text-gray-700">Age:</span>
+                <div className="text-blue-600">{metadata.profileData.age} years</div>
+              </div>
+            )}
+            {metadata.profileData.weight && (
+              <div className="bg-white p-2 rounded">
+                <span className="font-medium text-gray-700">Weight:</span>
+                <div className="text-blue-600">{metadata.profileData.weight} kg</div>
+              </div>
+            )}
+            {metadata.profileData.height && (
+              <div className="bg-white p-2 rounded">
+                <span className="font-medium text-gray-700">Height:</span>
+                <div className="text-blue-600">{metadata.profileData.height} cm</div>
+              </div>
+            )}
+            {metadata.profileData.bloodPressure && (
+              <div className="bg-white p-2 rounded">
+                <span className="font-medium text-gray-700">Blood Pressure:</span>
+                <div className="text-blue-600">{metadata.profileData.bloodPressure}</div>
+              </div>
+            )}
+            {metadata.profileData.cholesterolLevel && (
+              <div className="bg-white p-2 rounded">
+                <span className="font-medium text-gray-700">Cholesterol:</span>
+                <div className="text-blue-600">{metadata.profileData.cholesterolLevel} mg/dL</div>
+              </div>
+            )}
+            {metadata.profileData.medicalConditions && (
+              <div className="bg-white p-2 rounded">
+                <span className="font-medium text-gray-700">Conditions:</span>
+                <div className="text-blue-600">{metadata.profileData.medicalConditions}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Formatted View */}
       {viewMode === 'formatted' && (
@@ -353,13 +373,34 @@ const HealthRecommendations: React.FC = () => {
                 <div className="text-sm text-gray-700 whitespace-pre-line">
                   {recommendation.content}
                 </div>
+                
+                {/* Additional Details */}
+                <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-gray-500">
+                  <div>
+                    <span className="font-medium">Content Type:</span> {recommendation.type || 'general'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Word Count:</span> {recommendation.wordCount || 'N/A'}
+                  </div>
+                </div>
               </div>
+              
               <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">
-                    <i className="fas fa-robot mr-1"></i>
-                    Generated by AI based on your health profile
-                  </span>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-xs text-gray-500">
+                      <i className="fas fa-robot mr-1"></i>
+                      Generated by AI {metadata && (
+                        <>on {new Date(metadata.generatedAt).toLocaleDateString()}</>
+                      )}
+                    </span>
+                    {metadata?.profileData && (
+                      <span className="text-xs text-gray-500">
+                        <i className="fas fa-user-md mr-1"></i>
+                        Based on your health profile
+                      </span>
+                    )}
+                  </div>
                   <button className="text-indigo-600 hover:text-indigo-500 text-sm font-medium">
                     Learn more <i className="fas fa-external-link-alt ml-1"></i>
                   </button>
